@@ -19,7 +19,7 @@ and extendable.
 Add notes to your paper and decide how they are inserted:
 
  * as inline todo-notes,
- * as foldable margin notes (using advanced pdf layer features),
+ * as margin notes revealed/hidden on click (using advanced pdf layer feature called optional content groups (OCGs)),
  * collected at the end of the document.
  
  My main motivation for creating this was to support (almost) arbitrary tex in the notes, not only text or otherwise
