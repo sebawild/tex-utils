@@ -1,0 +1,272 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{notestoself}[2018/12/07 by Sebastian Wild]
+
+%% TODOs
+%%  add mode to only collect notes, but not have them in on OCG
+
+
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{xifthen}
+\RequirePackage{xstring}
+\RequirePackage{xspace}
+\RequirePackage{ifluatex}
+
+\RequirePackage[noadjust]{marginnote}
+\RequirePackage{mparhack}
+
+\makeatletter
+\def\notestoself@draft{true}
+\DeclareOption{draft}{
+	\def\notestoself@draft{true}
+}
+\DeclareOption{disable}{
+	\def\notestoself@draft{false}
+}
+\ProcessOptions
+
+
+%\usepackage{marginfix} % tries to better position marginpars but crashes with notations
+%\usepackage{everyshi}
+\newcounter{notetoself}[page]
+%\newcounter{pdfpage}
+%\setcounter{pdfpage}{1}
+%\EveryShipout{%
+%	\setcounter{notetoself}{0}%
+%	\stepcounter{pdfpage}%
+%}
+
+\newboolean{overlayednotes}
+\setboolean{overlayednotes}{true}
+\newboolean{collectnotes}
+\setboolean{collectnotes}{true}
+\RequirePackage{collect}
+\definecollection{notestoself}
+
+\ifluatex
+	% lualatex cannot handle ocgx;
+	% in aux files, we have stuff like \@ocgp@newocg{note-to-self-even-1}{notetoself-even-i}{0}{}
+	\newcommand\@ocgp@newocg[4]{} %simply ignore it
+\else 
+	\RequirePackage{ocgx}
+\fi
+
+\newsavebox{\notetoselfbox}
+\newlength{\notetoselfheight}
+
+
+\ifthenelse{\equal{\notestoself@draft}{true}}{%
+	\RequirePackage{adjustbox,xspace,amssymb,hyperref,relsize}
+	\RequirePackage[textsize=tiny,textwidth=2.4cm,
+		%backgroundcolor=orange!20,
+		backgroundcolor=white,
+		bordercolor=red!80!black,
+		shadow]{todonotes} 
+	\presetkeys{todonotes}{fancyline}{} % default: fancyline
+	\usetikzlibrary{calc}
+	\newcommand\todoin[2][]{%
+		\todo[inline, caption={2do}, bordercolor=red!80!black, size=\footnotesize, #1]{%
+		\begin{minipage}{\linewidth-1em}%
+			\setlength{\parskip}{1ex}%
+			\noindent\relax\ignorespaces#2\ignorespaces%
+		\end{minipage}}%
+	}
+	\providecommand\notetoself[2][]{%
+		\ifthenelse{\boolean{overlayednotes}}{%
+			\ifthenelse{\equal{#1}{disable}}{}{%
+				\savebox{\notetoselfbox}{%
+					\normalfont\footnotesize%
+					\begin{minipage}{\paperwidth-4em}%
+						\setlength{\parskip}{1ex}%
+						\noindent\relax\ignorespaces#2\ignorespaces%
+					\end{minipage}%
+				}%
+				\settototalheight{\notetoselfheight}{\usebox{\notetoselfbox}}%
+				\addtolength{\notetoselfheight}{15pt}%
+				\setboolean{overlayednotes}{false}%
+				\stepcounter{notetoself}%
+				\ifthenelse{\isodd{\thepage}}{%
+					\edef\layername{notetoself-odd-\roman{notetoself}}%
+					\edef\layernameGUI{note-to-self-odd-\arabic{notetoself}}%
+				}{%
+					\edef\layername{notetoself-even-\roman{notetoself}}%
+					\edef\layernameGUI{note-to-self-even-\arabic{notetoself}}%
+				}%
+				\edef\notesno{\thepage.\thenotetoself}%
+				\ifvmode%
+					\marginpar{%
+					\begin{tikzpicture}[overlay,remember picture] 
+%						\begin{pgfonlayer}{foreground}
+						\coordinate (base) at (0,0);
+						\coordinate[draw] (highestpos) at 
+							($(current page.north) + (0pt,-\notetoselfheight)$) ; 
+						\pgfgetlastxy{\XCoord}{\YCoord}
+						\begin{ocg}{\layernameGUI}{\layername}{0}%
+%							\begin{pgfonlayer}{foreground}
+							\path let 
+									\p1=(current page.center), 
+									\p2=(base),
+									\p3=(highestpos)
+								in 
+								node[
+									fill=blue!5,draw=black!50!blue,
+									rounded corners=2pt,
+									inner sep=6pt,
+									anchor=south,
+								] 
+								at ( \x1, {min(\y2,\y3)} ) {
+									\usebox{\notetoselfbox}
+								} ;
+%							\end{pgfonlayer}
+						\end{ocg}%
+						\path let \p1=(current page.east), \p2=(base) in 
+							node[
+								draw=black!50!blue!50,fill=white,
+								rounded corners=1pt,
+								anchor=east,xshift=-1em,
+								inner sep=1.5pt
+							] 
+							at (\x1,\y2) {
+								\scriptsize\color{blue!50!black!50}\ttfamily%
+								\adjustbox{scale={.5}{1}}{%
+									\toggleocgs[triggerocg=allactions]{\layername,\layername,,}{%
+										Note \thepage-\arabic{notetoself}%
+									}%
+								}%
+								\,\switchocg{\layername}{$\maltese$}%
+								\ifthenelse{\boolean{collectnotes}}{%
+									\,\hyperlink{collectednotetoself.\notesno}{$\downarrow$}
+								}{}%
+							} ;
+%						\end{pgfonlayer}
+					\end{tikzpicture}%
+					\vphantom{x}%
+					}%
+				\else%
+					\begin{tikzpicture}[overlay,remember picture] 
+%						\begin{pgfonlayer}{foreground}
+						\coordinate (base) at (0,0);
+						\coordinate[draw] (highestpos) at 
+							($(current page.north) + (0pt,-\notetoselfheight)$) ; 
+						\pgfgetlastxy{\XCoord}{\YCoord}
+						\begin{ocg}{\layernameGUI}{\layername}{0}%
+%							\begin{pgfonlayer}{foreground}
+							\path let 
+									\p1=(current page.center), 
+									\p2=(base),
+									\p3=(highestpos)
+								in 
+								node[
+									fill=blue!5,draw=black!50!blue,
+									rounded corners=2pt,
+									inner sep=6pt,
+									anchor=south,
+								] 
+								at ( \x1, {min(\y2,\y3)} ) {
+									\usebox{\notetoselfbox}
+								} ;
+%							\end{pgfonlayer}
+						\end{ocg}%
+						\path let \p1=(current page.east), \p2=(base) in 
+							node[
+								draw=black!50!blue!50,fill=white,
+								rounded corners=1pt,
+								anchor=east,xshift=-1em,
+								inner sep=1.5pt
+							] 
+							at (\x1,\y2) {
+								\scriptsize\color{blue!50!black!50}\ttfamily%
+								\adjustbox{scale={.5}{1}}{%
+									\toggleocgs[triggerocg=allactions]{\layername,\layername,,}{%
+										Note \thepage-\arabic{notetoself}%
+									}%
+								}%
+								\,\switchocg{\layername}{$\maltese$}%
+								\ifthenelse{\boolean{collectnotes}}{%
+									\,\hyperlink{collectednotetoself.\notesno}{$\downarrow$}
+								}{}%
+							} ;
+%						\end{pgfonlayer}
+					\end{tikzpicture}%
+				\fi%
+				\ifthenelse{\boolean{collectnotes}}{%
+					\begingroup\edef\noteno{\endgroup\noexpand\collectnotetoself{\thepage.\thenotetoself}}\noteno{#2}%
+				}{}%
+				\setboolean{overlayednotes}{true}%
+			}%
+			\ignorespaces%
+		}{%
+			\todo[inline, caption={2do}, bordercolor=blue!50!black, size=\footnotesize, #1]{%
+				\begin{minipage}{\linewidth-1em}%
+					\setlength{\parskip}{1ex}%
+					\noindent\relax\ignorespaces#2\ignorespaces%
+				\end{minipage}%
+			}%
+		}%
+	}
+	\providecommand\collectnotetoself[2]{% page-notetoselfno content
+		\hypertarget{notetoself.#1}{}%
+		\begin{collect}{notestoself}{}{}% beforecoll aftercoll
+			\noindent%
+			\begin{tikzpicture}%
+				\node[
+						draw=black!50!blue!50,fill=white,
+						rounded corners=3pt,
+						anchor=east,xshift=-1em,
+						inner sep=3pt,
+					] (noteno) {%
+						\hypertarget{collectednotetoself.#1}{}%
+						\larger\color{blue!50!black!50}\sffamily\bfseries%
+							\hyperlink{notetoself.#1}{Note #1}%
+						} ;
+				\node[
+						fill=blue!5,draw=black!50!blue,
+						rounded corners=2pt,
+						inner sep=6pt,
+						anchor=north west,
+						yshift=-1ex,
+					] at (noteno.south west) {%
+%								\resizebox{\linewidth-20pt}!{\usebox{\notetoselfbox}}%
+						\normalfont\footnotesize%
+						\begin{minipage}{\linewidth-13pt}%
+							\setboolean{overlayednotes}{false}%
+							\setlength{\parskip}{1ex}%
+							\noindent\relax\ignorespaces#2
+							\setboolean{overlayednotes}{true}%
+							\ignorespaces%
+						\end{minipage}%
+					};
+			\end{tikzpicture}%
+			\par\bigskip%
+		\end{collect}%
+	}
+	\providecommand\hackpartoitemize{%
+		\let\oldpar\par%
+		\def\par{\oldpar$\blacktriangleright$~~}%
+	}
+	%%% Hack to force all todonotes into right margin
+	% taken from http://tex.stackexchange.com/a/69624 
+	%\makeatletter
+	%\usepackage{etoolbox}
+	%\patchcmd{\@addmarginpar}{\ifodd\c@page}{\ifodd\c@page\@tempcnta\m@ne}{}{}
+	%\makeatother
+	%\reversemarginpar
+}{%
+	\providecommand\saveunskip{%
+		\ifvmode%
+		\else%
+			\ignorespaces%
+		\fi%
+	}%
+	\providecommand\todo[2][]{\saveunskip} %disable
+	\providecommand\todoin[2][]{\saveunskip} %disable
+	\providecommand\notetoself[2][]{\saveunskip} %disable
+}
+
+
+\providecommand\printnotestoself{%
+	\ifthenelse{\boolean{collectnotes}}{%
+		\includecollection{notestoself}%
+	}{}%
+}
+
+\makeatother

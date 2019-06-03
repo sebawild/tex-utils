@@ -1,0 +1,81 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{url-doi-arxiv}[2018/12/28 by Sebastian Wild]
+
+\RequirePackage{url}
+\newcommand*\urlfont{\ttfamily\slshape\fontseries{lc}\selectfont}
+\def\UrlFont{\urlfont}
+
+\DeclareOption{bibtex}{
+	% !BIB program = bibtex
+	\bibliographystyle{plainurl}
+	
+	\let\url@oldthebibliography\thebibliography
+	\renewcommand\thebibliography[1]{%
+		\url@oldthebibliography{#1}%
+%		\pdfbookmark[1]{References}{}%
+	%	\sectionmark{Bibliography}%
+	%	\markright{References}
+		\let\path\nolinkurl% format doi entries as URLs to get same font
+	}
+	
+}
+\ProcessOptions
+
+
+\RequirePackage{hyperref}
+
+%\usepackage{doi}
+% copied out to modify style
+\makeatletter
+	%% the meat of the code
+	%% the first command opens a group, and changes a few catcodes.
+	\def\doi{%
+	  \begingroup 
+	  \begingroup 
+	  \lccode`\~=`\#\relax 
+	  \lowercase{\def~{\#}}%
+	  \lccode`\~=`\_\relax
+	  \lowercase{\def~{\_}}%
+	  \lccode`\~=`\<\relax 
+	  \lowercase{\def~{\textless}}%
+	  \lccode`\~=`\>\relax 
+	  \lowercase{\def~{\textgreater}}%
+	  \lccode`\~=0\relax 
+	  \catcode`\#=\active 
+	  \catcode`\_=\active 
+	  \catcode`\<=\active 
+	  \catcode`\>=\active 
+	  \@doi%
+	}
+	
+	%% this is the actual command which processes the argument, with the catcodes 
+	%% set in the previous command
+	%% it closes the group, and spits out the url.
+	\def\@doi#1{% 
+	  \let\#\relax
+	  \let\_\relax
+	  \let\textless\relax 
+	  \let\textgreater\relax 
+	  \edef\x{\toks0={{#1}}}% 
+	  \x
+	  \edef\#{\@percentchar23}%
+	  \edef\_{_}%
+	  \edef\textless{\@percentchar3C}% instead of {\string<} for Apple
+	  \edef\textgreater{\@percentchar3E}% instead of {\sting>} for Apple
+	  \edef\x{\toks1={\noexpand\small\noexpand\urlfont\noexpand\href{https://dx.doi.org/#1}}}% 
+	  \x
+	  \edef\x{\endgroup\noexpand\urlfont doi:\,\the\toks1 \the\toks0\endgroup}%
+	  \x\/\xspace%
+	}
+
+
+
+
+
+\newcommand\arxiv[1]{%
+	{\urlfont arxiv:\,\href{https://arxiv.org/abs/#1}{#1}}%
+	\xspace%
+}
+
+
+

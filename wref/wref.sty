@@ -1,0 +1,252 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{wref}[2018/12/28 by Sebastian Wild]
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{xifthen}
+\RequirePackage{xstring}
+\RequirePackage{xspace}
+
+% This package provides a simple and extensible way create hyperlinks to
+% Sections, equations, floats etc. where the category descriptor belongs to the
+% clickable part of a hyperref link.
+% This package is inspired by the functionality of cleveref and hyperref's
+% \autoref, but aims to be simpler (and more easy to adapt to newly hacked
+% stuff ...)
+
+\makeatletter
+
+\def\wref@concise{false}
+
+\def\wref@lang{NO SUPPORTED LANGUAGE SELECTED}
+\DeclareOption{ngerman}{
+	\def\wref@lang{ngerman}
+}
+\DeclareOption{american}{
+	\def\wref@lang{american}
+}
+\DeclareOption{concise}{
+	\def\wref@concise{true}
+}
+\ProcessOptions
+
+
+
+\def\wref@putname#1#2{\expandafter\gdef\csname wref@names@#1\endcsname{#2}}
+\def\wref@getname#1{\csname wref@names@#1\endcsname}
+
+%%% 
+\wref@putname{fig}{\figurename}
+\wref@putname{sfig}{\figurename}
+\wref@putname{tab}{\tablename}
+\wref@putname{part}{\partname}
+\wref@putname{app}{\appendixname}
+
+\wref@putname{thm}{Theorem}
+\wref@putname{lem}{Lemma}
+\wref@putname{pro}{Proposition}
+\wref@putname{def}{Definition}
+
+\wref@putname{eq}{}
+
+
+%%% Placeholders for language-specific custom category names
+\ifthenelse{\equal{\wref@lang}{ngerman}}{%
+	% Define German names for reference categories
+	\wref@putname{cha}{Kapitel}
+	\wref@putname{sec}{Abschnitt}
+	\wref@putname{fn}{Fußnote}
+	\wref@putname{cor}{Korollar}
+	\wref@putname{case}{Fall}
+	\wref@putname{alg}{Algorithmus}
+	\wref@putname{lin}{Zeile}
+	\wref@putname{prop}{Eigenschaft}
+	\wref@putname{fact}{Fakt}
+	\wref@putname{stmt}{Aussage}
+	\wref@putname{open}{Ungelöstes Problem}
+	\wref@putname{conj}{Vermutung}
+	\wref@putname{rem}{Bemerkung}
+	\def\wref@equationlongname{Gleichung}
+}{}% 
+\ifthenelse{\equal{\wref@lang}{american}}{%
+	% Define American names for reference categories
+	\wref@putname{cha}{Chapter}
+	\wref@putname{sec}{Section}
+	\wref@putname{fn}{Footnote}
+	\wref@putname{cor}{Corollary}
+	\wref@putname{case}{Case}
+	\wref@putname{alg}{Algorithm}
+	\wref@putname{lin}{line}
+	\wref@putname{prop}{Property}
+	\wref@putname{fact}{Fact}
+	\wref@putname{stmt}{Statement}
+	\wref@putname{open}{Open Problem}
+	\wref@putname{conj}{Conjecture}
+	\wref@putname{rem}{Remark}
+	\def\wref@equationlongname{Equation}
+}{}% 
+
+\ifthenelse{\equal{\wref@concise}{true}}{
+	\wref@putname{thm}{Thm.\!}
+	\wref@putname{lem}{Lem.\!}
+	\wref@putname{pro}{Prop.\!}
+	\wref@putname{def}{Def.\!}
+	\ifthenelse{\equal{\wref@lang}{ngerman}}{%
+		% Define German names for reference categories
+		\wref@putname{cha}{Kap.\!}
+		\wref@putname{sec}{\S\!}
+		\wref@putname{fn}{Fußn.\!}
+		\wref@putname{cor}{Kor.\!}
+		\wref@putname{case}{Fall}
+		\wref@putname{alg}{Alg.\!}
+		\wref@putname{lin}{Z.\!}
+		\wref@putname{prop}{Eigenschaft}
+		\wref@putname{fact}{Fakt}
+		\wref@putname{stmt}{Auss.\!}
+		\wref@putname{open}{Ungelöstes Problem}
+		\wref@putname{conj}{Verm.\!}
+		\def\wref@equationlongname{Gl.\!}
+		\wref@putname{fig}{Abb.\!}
+		\wref@putname{sfig}{Abb.\!}
+		\wref@putname{tab}{Tab.\!}
+		\wref@putname{part}{\partname}
+		\wref@putname{app}{Anh.\!}
+		\wref@putname{rem}{Bem.\!}
+	}{}% 
+	\ifthenelse{\equal{\wref@lang}{american}}{%
+		% Define American names for reference categories
+		\wref@putname{cha}{Cha.\!}
+		\wref@putname{sec}{\S\!}
+		\wref@putname{fn}{Fn.\!}
+		\wref@putname{cor}{Cor.\~}
+		\wref@putname{case}{Case}
+		\wref@putname{alg}{Alg.\!}
+		\wref@putname{lin}{l.\!}
+		\wref@putname{prop}{Prop.\!}
+		\wref@putname{fact}{Fact}
+		\wref@putname{stmt}{Stmt.\!}
+		\wref@putname{open}{Open Problem}
+		\wref@putname{conj}{Conj.\!}
+		\def\wref@equationlongname{Eq.\!}
+		\wref@putname{fig}{Fig.\!}
+		\wref@putname{sfig}{Fig.\!}
+		\wref@putname{tab}{Tab.\!}
+		\wref@putname{part}{\partname}
+		\wref@putname{app}{App.\!}
+		\wref@putname{rem}{Rem.\!}
+	}{}% 
+}{}
+
+
+
+\providecommand\wildrefprefix[1]{%
+	\IfBeginWith{#1}{fig:}{\wref@getname{fig}}{%
+	\IfBeginWith{#1}{sfig:}{\wref@getname{sfig}}{%
+	\IfBeginWith{#1}{tab:}{\wref@getname{tab}}{%
+	\IfBeginWith{#1}{part:}{\wref@getname{part}}{%
+	\IfBeginWith{#1}{cha:}{\wref@getname{cha}}{%
+	\IfBeginWith{#1}{sec:}{\wref@getname{sec}}{%
+	\IfBeginWith{#1}{fn:}{\wref@getname{fn}}{%
+	\IfBeginWith{#1}{eq:}{\wref@getname{eq}}{%
+	\IfBeginWith{#1}{app:}{\wref@getname{app}}{%
+	\IfBeginWith{#1}{thm:}{\wref@getname{thm}}{%
+	\IfBeginWith{#1}{lem:}{\wref@getname{lem}}{%
+	\IfBeginWith{#1}{pro:}{\wref@getname{pro}}{%
+	\IfBeginWith{#1}{cor:}{\wref@getname{cor}}{%
+	\IfBeginWith{#1}{case:}{\wref@getname{case}}{%
+	\IfBeginWith{#1}{alg:}{\wref@getname{alg}}{%
+	\IfBeginWith{#1}{lin:}{\wref@getname{lin}}{%
+	\IfBeginWith{#1}{prop:}{\wref@getname{prop}}{%
+	\IfBeginWith{#1}{def:}{\wref@getname{def}}{%
+	\IfBeginWith{#1}{fact:}{\wref@getname{fact}}{%
+	\IfBeginWith{#1}{stmt:}{\wref@getname{stmt}}{%
+	\IfBeginWith{#1}{open:}{\wref@getname{open}}{%
+	\IfBeginWith{#1}{conj:}{\wref@getname{conj}}{%
+	\IfBeginWith{#1}{rem:}{\wref@getname{rem}}{%
+	% Else: issue warning and do fallback
+	?????
+	}}}}}}}}}}}}}}}}}}}}}}}%
+}
+
+
+% Main command for producing references including category descriptor, e.g.
+% \wref{sec:my-section} produces "Section~\ref{sec:my-section}"
+\providecommand\wref[2][]{%
+	\ifthenelse{\equal{#1}{}}{%
+		\IfBeginWith{#2}{eq:}{\eqref{#2}}{%
+		\IfBeginWith{#2}{lin:}{\wref@getname{lin}~\ref*{#2}}{%
+		% Else: fallback
+			\wildref[\wildrefprefix{#2}]{#2}{\ref*}%
+		}}%
+	}{%
+		\IfBeginWith{#2}{eq:}{\wildref[#1]{#2}{\eqref}}{%
+		\IfBeginWith{#2}{lin:}{#1~\ref*{#2}}{%
+		% Else: fallback
+			\wildref[#1]{#2}{\ref*}%
+		}}%
+	}%
+}
+
+% Detailed command which allows to give a different ref-command, producing
+% a hyperlink with text “#1~#3{#2}”. You should give starred versions of ref
+% commands!
+\providecommand\wildref[3][]{%
+	\hyperref[#2]{#1~#3{#2}}\xspace%
+}
+
+\providecommand\wildtpageref[3][]{%
+	\hyperref[#2]{#1~#3{#2} on page~\pageref*{#2}}\xspace%
+}
+
+\providecommand\wildpageref[3][]{%
+	\hyperref[#2]{#1~#3{#2} (page~\pageref*{#2}})\xspace%
+}
+
+
+\providecommand\wtpref[2][]{%
+	\IfBeginWith{#2}{eq:}{%
+		\def\mypageref##1{%
+			\eqref{##1} on page~\pageref*{##1}%
+		}%
+	}{%
+		\def\mypageref##1{%
+			\ref*{##1} on page~\pageref*{##1}%
+		}%
+	}%
+	\ifthenelse{\equal{#1}{}}{%
+		\IfBeginWith{#2}{eq:}{%
+			\mypageref{#2}%
+		}{%
+			\wildref[\wildrefprefix{#2}]{#2}{\mypageref}%
+		}%
+	}{%
+		\wildref[#1]{#2}{\mypageref}%
+	}%
+}
+
+\providecommand\wpref[2][]{%
+	\def\mypageref##1{%
+		\ref*{##1} (page~\pageref*{##1})%
+	}%
+	\ifthenelse{\equal{#1}{}}{%
+		\wildref[\wildrefprefix{#2}]{#2}{\mypageref}%
+	}{%
+		\wildref[#1]{#2}{\mypageref}%
+	}%
+}
+
+\providecommand\weqref[1]{%
+	\IfBeginWith{#1}{eq:}{%
+		\wref[\wref@equationlongname]{#1}%
+	}{%
+		\wref{#1}%
+	}%
+}
+
+\providecommand\wpeqref[1]{%
+	\IfBeginWith{#1}{eq:}{%
+		\wtpref[\wref@equationlongname]{#1}%
+	}{%
+		\wtpref{#1}%
+	}%
+}
+
+\makeatother

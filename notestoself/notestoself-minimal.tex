@@ -1,0 +1,71 @@
+\documentclass{article}
+
+\usepackage{notestoself}
+
+
+\setboolean{overlayednotes}{true}
+\setboolean{collectnotes}{true}
+
+
+\begin{document}
+
+Some paragraph before.
+
+\notetoself{Test outside par}
+
+Some paragraph \notetoself{Test inside par} continues.
+
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+
+Nested:
+
+\notetoself{
+	I'm outside
+	%
+	\notetoself{
+		I may not be in outer par mode.
+		\notetoself{Deeper nested!}
+	}
+	
+	More paragraphs
+}
+
+
+
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+
+
+Why??
+\notetoself{aaa}
+\notetoself{aaa}
+
+\notetoself{
+	One note
+	\notetoself{
+		I may not be in outer par mode.
+		
+		And I may contain several paragraphs.
+	}
+}
+
+
+\section*{Collected notes}
+
+\printnotestoself
+
+
+\end{document}
