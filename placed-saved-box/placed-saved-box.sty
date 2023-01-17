@@ -1,0 +1,62 @@
+% placed-saved-box.sty 
+\ProvidesPackage{placed-saved-box}
+\RequirePackage{tikz}
+
+% Defining a new coordinate system for the page:
+%
+% --------------------------
+% |(-1,1)    (0,1)    (1,1)|
+% |                        |
+% |(-1,0)    (0,0)    (1,0)|
+% |                        |
+% |(-1,-1)   (0,-1)  (1,-1)|
+% --------------------------
+% taken from http://tex.stackexchange.com/questions/89588/positioning-relative-to-page-in-tikz
+\def\parsecomma#1,#2\endparsecomma{\def\page@x{#1}\def\page@y{#2}}
+\tikzdeclarecoordinatesystem{page}{
+    \parsecomma#1\endparsecomma
+    \pgfpointanchor{current page}{north east}
+    % Save the upper right corner
+    \pgf@xc=\pgf@x%
+    \pgf@yc=\pgf@y%
+    % save the lower left corner
+    \pgfpointanchor{current page}{south west}
+    \pgf@xb=\pgf@x%
+    \pgf@yb=\pgf@y%
+    % Transform to the correct placement
+    \pgfmathparse{(\pgf@xc-\pgf@xb)/2.*\page@x+(\pgf@xc+\pgf@xb)/2.}
+    \expandafter\pgf@x\expandafter=\pgfmathresult pt
+    \pgfmathparse{(\pgf@yc-\pgf@yb)/2.*\page@y+(\pgf@yc+\pgf@yb)/2.}
+    \expandafter\pgf@y\expandafter=\pgfmathresult pt
+}
+
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
+
+\newsavebox\savedboxstore
+\newcommand<>\savedbox[2][]{% [node-opts] 1:content
+	\only#3{%
+	\begin{lrbox}{\savedboxstore}%
+		#2%
+	\end{lrbox}%
+	\begin{tikzpicture}[baseline=(box.base),remember picture] 
+		\node[#1] (box) {\usebox{\savedboxstore}} ;
+	\end{tikzpicture}%
+	}%
+}
+
+\newcommand<>\placedbox[4][]{% [node-opt] 1:x 2:y 3:text  %pos page cs
+	\visible#5{%
+		\begin{lrbox}{\savedboxstore}%
+			#4%
+		\end{lrbox}%
+		\begin{tikzpicture}[overlay,remember picture]
+		\begin{pgfonlayer}{foreground}
+			\node (node) [#1] at (page cs:#2,#3) {\usebox\savedboxstore}
+			;%
+		\end{pgfonlayer}
+		\end{tikzpicture}%
+	}%
+}

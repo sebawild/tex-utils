@@ -1,0 +1,31 @@
+\documentclass[11pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usetheme{default}
+
+\usepackage{placed-saved-box}
+
+\usepackage{blindtext}
+
+\begin{document}
+
+\begin{frame}{savedbox}
+	\savedbox[rounded corners=5pt,inner sep=10pt]{\begin{minipage}{.5\linewidth}
+		\begin{itemize}[<+->]
+		\item one
+		\item two
+		\item three
+		\end{itemize}
+		\end{minipage}
+	}
+	
+\end{frame}
+
+\begin{frame}{placedbox}
+	
+	\blindtext
+	\blindtext
+	\placedbox<2->[fill=white]{0}{0}{\color{red}\large This text appears above the text.}
+\end{frame}
+\end{document}
