@@ -10,8 +10,15 @@
 
 \begin{document}
 
+
+\begin{frame}{placedbox}
+	\blindtext
+	\placedbox<2->[fill=white]{0}{0}{\color{red}\large This text appears above the text.}
+\end{frame}
+
+
 \begin{frame}{savedbox}
-	\savedbox[rounded corners=5pt,inner sep=10pt]{\begin{minipage}{.5\linewidth}
+	\savedbox[draw,rounded corners=5pt,inner sep=10pt]{\begin{minipage}{.5\linewidth}
 		\begin{itemize}[<+->]
 		\item one
 		\item two
@@ -19,13 +26,6 @@
 		\end{itemize}
 		\end{minipage}
 	}
-	
 \end{frame}
 
-\begin{frame}{placedbox}
-	
-	\blindtext
-	\blindtext
-	\placedbox<2->[fill=white]{0}{0}{\color{red}\large This text appears above the text.}
-\end{frame}
 \end{document}
