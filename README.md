@@ -42,3 +42,15 @@ Two simple versatile commands intended for `beamer` presentations:
 
 * `\\placedbox` allows to put some content at an absolute position on the page, above other content. Very useful for popups and visual hacks on slides.
 * `\\savedbox` allows to use complicated content including beamer overlay specifications inside other things where those would break because they are typeset several times. It works by first storing the content in a savebox. This is used inside placedbox.
+
+
+## wclrscode
+
+A modified version of clrscode3e with a few pseudocode syntax tweaks:
+
+* assignment (`\gets`) uses `:=` instead of `=`
+* equality (`\isequal`) check uses `==` instead of `=`
+* less spacing around codeboxes (for use in floats)
+* Comments use sans-serif font
+* smaller line numbers
+* added for each, end for, end if, end while keywords
